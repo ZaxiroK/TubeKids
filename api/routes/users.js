@@ -67,39 +67,68 @@ router.post("/signup", (req, res, next) => {
 });
 
 router.get('/', (req, res, next) => {
-  User.findOne()
+  User.find()
   //selecciona lo que se le especifica
    .select('user email password _id')
    //.populate('product','name')//selecciona solo el nombre de ese fkey
    .exec()
    .then(docs => {
-      res.status(200).json({
+      const response = {
          //devolvera a detalla la informacion con mas info
         count: docs.length,
         users: docs.map(doc => {
           return {
-            _id: doc._id,
             email: doc.email,
             password: doc.password,
-            repeatPaswword: doc.repeatPaswword,
-            name: doc.body.name,
-            surNames: doc.body.name, 
-            country: doc.body.surNames,
-            birthday: doc.body.surNames,
+            _id: doc._id,
+            //repeatPaswword: doc.repeatPaswword,
+            //name: doc.body.name,
+            //surNames: doc.body.name, 
+            //country: doc.body.surNames,
+            //birthday: doc.body.surNames,
             request: {
               type: 'GET',
-              url: 'http://localhost:3000/user/singup' + doc._id
+              url: 'http://localhost:3000/users/' + doc._id
             }
-          };
+          }
         })
-      });
+      }
+      res.status(200).json(response); 
     })
     .catch(err => {
+      console.log(err);
       res.status(500).json({
         error: err
       });
      });
  });
+
+ router.get('/:userId', (req, res, next) => {
+  const id = req.params.userId;
+  User.findById(id)
+  .select('user email password _id')
+  .exec()
+  .then(doc => {
+      console.log('From database', doc);
+      if(doc){
+         res.status(200).json({
+             user: doc,
+             request:{
+                 type: 'GET',
+                 url: 'http://localhost:3000/users/'
+             }
+         });
+      } else{
+          res.status(400).json({message: 'No valid entry found for provided ID'})
+      }
+  })
+  .catch(err => {
+      console.log(err);
+      res.status(500).json({error: err});
+  });
+
+});
+
  router.patch('/:userId', (req, res, next) => {
     const id = req.params.userId;
     const updateOps = {};
@@ -113,7 +142,7 @@ router.get('/', (req, res, next) => {
             message: 'User updated',
             request:{
                 type: 'GET',
-                url: 'http://localhost:3000/products/' + id
+                url: 'http://localhost:3000/users/' + id
             }
         });
     })
@@ -124,6 +153,34 @@ router.get('/', (req, res, next) => {
         });
     });
     
+
+});
+
+
+ router.patch('/:userId', (req, res, next) => {
+  const id = req.params.userId;
+  const updateOps = {};
+  for(const ops of req.body){
+     updateOps[ops.propName] = ops.value; 
+  }
+  User.update({_id: id}, {$set: updateOps})
+  .exec()
+  .then(result =>{
+      res.status(200).json({
+          message: 'User updated',
+          request:{
+              type: 'GET',
+              url: 'http://localhost:3000/users/' + id
+          }
+      });
+  })
+  .catch(err => {
+      console.log(err);
+      res.status(500).json({
+          error: err
+      });
+  });
+  
 
 });
 
