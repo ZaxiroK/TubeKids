@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-
+const bodyParser = require('body-parser')
 const User = require("../models/user");
 
 
@@ -129,13 +129,24 @@ router.get('/', (req, res, next) => {
 
 });
 
+//falta validar que solo cambie en dato cuando uno manda estos
  router.patch('/:userId', (req, res, next) => {
     const id = req.params.userId;
-    const updateOps = {};
-    for(const ops of req.body){
-       updateOps[ops.propName] = ops.value; 
-    }
-    User.update({_id: id}, {$set: updateOps})
+    //const updateOps = {};
+    //console.log(req.body);
+    var updateOps = {
+      email: req.body.email,
+      password: req.body.password,
+      repeatPaswword: req.body.repeatPaswword,
+      name: req.body.name,
+      surNames: req.body.surNames, 
+      country: req.body.country,
+      birthday: req.body.birthday
+     }
+    
+     console.log(updateOps);
+     //User.update(updateOps, {where:{_id: id}})
+     User.update({_id: id}, {$set: updateOps})
     .exec()
     .then(result =>{
         res.status(200).json({
